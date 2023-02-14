@@ -33,3 +33,36 @@ def relu_backward(dA, cache):
     return dZ
 
 
+
+# import numpy as np
+# import matplotlib.pyplot as plt
+# 
+# 
+# def softmax(z): 
+#     cache = z
+#     z -= np.max(z)  # This is to avoid numerical problem,
+#     sm = (np.exp(z).T / np.sum(np.exp(z), axis=1))  # Calculating the Softmax formula
+#     return sm, cache
+# 
+# 
+# def relu(z):
+# 
+#     s = np.maximum(0, z)  # Calculating ReLU formula
+#     cache = z
+#     return s, cache
+# 
+# 
+# def softmax_backward(dA, cache):
+# 
+#     z = cache
+#     s = (np.exp(z).T / np.sum(np.exp(z), axis=1))  # Calculating the Softmax formula to use ito compute the derivate
+#     dZ = dA * s * (1 - s)
+#     return dZ
+# 
+# 
+# def relu_backward(dA, cache):
+# 
+#     Z = cache
+#     dZ = np.array(dA, copy=True)  # just converting dz to a correct object.
+#     dZ[Z <= 0] = 0
+#     return dZ
