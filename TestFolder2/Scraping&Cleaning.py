@@ -29,3 +29,9 @@ data_clean = data_cleans.drop(['title', "body","text_tokens", "subreddit", "url"
 data_clean.dropna(inplace=True)
 
 
+
+The code above retrieves the 10,000 latest posts from a specific subreddit and stores them in a Pandas DataFrame. The DataFrame includes columns for the post's title, score, ID, subreddit, URL, number of comments, body text, and creation date.
+
+The "clean_text" function takes in the DataFrame, text field to be cleaned, and name for the new cleaned field. The function converts the text to lowercase, removes Twitter handles and URLs, and removes any non-alphanumeric characters. It also removes numbers from the text. The function then adds the cleaned text to a new field in the DataFrame and returns the updated DataFrame.
+
+After cleaning the text, the script creates a new column for the cleaned body text, removes stopwords (common words like "the" and "and"), and tokenizes the remaining words in each post. Finally, unnecessary columns are dropped, and any remaining missing values are removed from the DataFrame.
