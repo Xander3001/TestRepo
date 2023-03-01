@@ -33,3 +33,11 @@
         k = cv2.waitKey(10)
         if k == 27:
             break
+
+This code reads frames from a video capture object using the `isOpen()` method of it. Then the `get_img_contour_thresh()` function is called, which takes an image as input, and returns the image, the contours detected in the image, and a binary threshold image. If there are any contours detected in the image, the code selects the contour with the largest area, provided it is larger than 2500. The contour area is calculated using `cv2.contourArea()`, which calculates the area of the contour. 
+
+If the contour area is larger than 2500, it is assumed to contain a digit, and the bounding rectangle is determined with `cv2.boundingRect()`. A new image is then created containing only the digit, and the image is resized to 28 x 28 pixels using `cv2.resize()`. The image is then flattened and reshaped to 784 x 1, to make it acceptable input to the three digit recognition models used. The three models are `Digit_Recognizer_LR` (logistic regression), `Digit_Recognizer_NN` (shallow neural network), and `Digit_Recognizer_DL` (deep neural network). 
+
+The predicted digits from each of the models are stored in the variables `ans1`, `ans2`, and `ans3`. 
+
+Finally, a rectangle is drawn on the original image around the area where the digit was detected, and the predicted digits are displayed on the image using `cv2.putText()`. The image and the contours are displayed in separate windows using `cv2.imshow()`. The code then waits for a key press, and if the key pressed is the 'Esc' key (key code 27), the loop is ended using a `break` statement.
