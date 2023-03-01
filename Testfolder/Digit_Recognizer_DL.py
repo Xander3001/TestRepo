@@ -33,3 +33,47 @@ def relu_backward(dA, cache):
     return dZ
 
 
+
+Function: softmax
+
+Description: This function computes the softmax activation function for a given input array.
+
+Input:
+- z: input array for which softmax activation function should be computed.
+
+Output:
+- sm: output array after applying the softmax activation function.
+- cache: stores the input array for later use in backpropagation.
+
+Function: relu
+
+Description: This function computes the rectifier linear unit (ReLU) activation function for a given input array.
+
+Input:
+- z: input array for which ReLU activation function should be computed.
+
+Output:
+- s: output array after applying the ReLU activation function.
+- cache: stores the input array for later use in backpropagation.
+
+Function: softmax_backward
+
+Description: This function computes the derivatives of the softmax activation function for a given output array and input array.
+
+Input:
+- dA: derivative of the output array with respect to the cost function.
+- cache: stores the input array for use in backpropagation.
+
+Output:
+- dZ: derivative of the input array with respect to the cost function.
+
+Function: relu_backward
+
+Description: This function computes the derivatives of the ReLU activation function for a given output array and input array.
+
+Input:
+- dA: derivative of the output array with respect to the cost function.
+- cache: stores the input array for use in backpropagation.
+
+Output:
+- dZ: derivative of the input array with respect to the cost function.
