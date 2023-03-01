@@ -33,3 +33,78 @@
         k = cv2.waitKey(10)
         if k == 27:
             break
+
+# This program reads frames from a video capture device and uses various digit recognition models to classify digits found in the frames
+# Import required libraries
+import cv2
+import numpy as np
+from Digit_Recognizer_LR import Digit_Recognizer_LR
+from Digit_Recognizer_NN import Digit_Recognizer_NN
+from Digit_Recognizer_DL import Digit_Recognizer_DL
+
+# Initialize the video capture device
+cap = cv2.VideoCapture(0)
+
+# Loop while the capture device is open
+while (cap.isOpened()):
+    # Read a frame from the video capture device
+    ret, img = cap.read()
+
+    # Detect contours in the frame and apply thresholding to the image
+    img, contours, thresh = get_img_contour_thresh(img)
+
+    # Initialize answer placeholders
+    ans1 = ''
+    ans2 = ''
+    ans3 = ''
+
+    # If any contours were detected in the frame:
+    if len(contours) > 0:
+        # Get the contour with the largest area
+        contour = max(contours, key=cv2.contourArea)
+
+        # If the contour area is above the minimum threshold value:
+        if cv2.contourArea(contour) > 2500:
+            # Get the coordinates and dimensions of a bounding rectangle around the contour
+            x, y, w, h = cv2.boundingRect(contour)
+            
+            # Extract the ROI of the contour using the bounding rectangle
+            newImage = thresh[y:y + h, x:x + w]
+
+            # Resize the ROI to 28x28 pixels
+            newImage = cv2.resize(newImage, (28, 28))
+
+            # Flatten the ROI and reshape it to a column vector
+            newImage = np.array(newImage)
+            newImage = newImage.flatten()
+            newImage = newImage.reshape(newImage.shape[0], 1)
+
+            # Use various digit recognition models to predict the digit in the ROI
+            ans1 = Digit_Recognizer_LR.predict(w_LR, b_LR, newImage)
+            ans2 = Digit_Recognizer_NN.predict_nn(d2, newImage)
+            ans3 = Digit_Recognizer_DL.predict(d3, newImage)
+
+    # Draw a green rectangle on the frame to highlight the region of interest
+    x, y, w, h = 0, 0, 300, 300
+    cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    # Display the predicted digits on the frame
+    cv2.putText(img, "Logistic Regression : " + str(ans1), (10, 320),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    cv2.putText(img, "Shallow Network :  " + str(ans2), (10, 350),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    cv2.putText(img, "Deep Network :  " + str(ans3), (10, 380),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+    # Display the frame and the detected contours
+    cv2.imshow("Frame", img)
+    cv2.imshow("Contours", thresh)
+
+    # Wait for user input to exit the program
+    k = cv2.waitKey(10)
+    if k == 27:
+        break
+
+# Release the video capture device and close all windows
+cap.release()
+cv2.destroyAllWindows()
