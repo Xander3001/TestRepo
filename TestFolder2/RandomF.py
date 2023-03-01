@@ -70,3 +70,21 @@ for index, doc in enumerate(entities):
             full_df.at[index, entity_type] = entity
         else:
             full_df.at[index, entity_type] = full_df.at[index, entity_type] + ", {}".format(entity)
+
+The code above contains different functions and scripts:
+
+1. `nouns` function: This function extracts nouns from a given spacy `doc` object and returns the 10 most common nouns using `Counter` from the `collections` module.
+
+2. `verbs` function: This function extracts verbs from a given spacy `doc` object and returns the 10 most common verbs using `Counter` from the `collections` module.
+
+3. `sanitize_names` function: This function takes in a string of text and redacts all PERSON entities (people's names) using "[REDACTED]" and returns the sanitized text.
+
+4. `sanitize_locations` function: This function takes in a string of text and redacts all GPE entities (locations) using "[REDACTED]" and returns the sanitized text.
+
+5. `spacy_tokenizer` function: This function tokenizes a given sentence using spacy's default parser, lemmatizes the words, removes stop words and punctuations, and returns the tokens joined as a string.
+
+6. `selected_topics` function: This function takes in a trained LDA model and a vectorizer, and prints the top N words for each topic in the model.
+
+7. `entities` script: This script extracts entity information (text and label) from each document in a pandas dataframe using spacy's `nlp.pipe` method and appends the results to a list.
+
+8. `full_df` script: This script initializes an empty dataframe with specific columns and index, and fills the dataframe with entity information extracted from each document using the `entities` list. If there are multiple entities with the same type in a document, they are concatenated separated by a comma.
