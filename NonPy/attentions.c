@@ -1,7 +1,8 @@
-
+The overall code is a program that uses a convolutional neural network to make predictions on images, specifically for image recognition tasks. The program uses a pre-trained network with consideration of multiple scales for object detection.
 
 void extend_data_truth(data *d, int n, float val)
 {
+    // Function to extend the truth data for a given number of columns with a specified value
     int i, j;
     for(i = 0; i < d->y.rows; ++i){
         d->y.vals[i] = realloc(d->y.vals[i], (d->y.cols+n)*sizeof(float));
@@ -14,6 +15,7 @@ void extend_data_truth(data *d, int n, float val)
 
 matrix network_loss_data(network *net, data test)
 {
+    // Function to calculate the loss of a given network on a test data set
     int i,b;
     int k = 1;
     matrix pred = make_matrix(test.X.rows, k);
@@ -40,7 +42,6 @@ matrix network_loss_data(network *net, data test)
             int t = max_index(y + b*test.y.cols, 1000);
             float err = sum_array(delta + b*net->outputs, net->outputs);
             pred.vals[i+b][0] = -err;
-            //pred.vals[i+b][0] = 1-delta[b*net->outputs + t];
         }
     }
     free(X);
@@ -48,9 +49,9 @@ matrix network_loss_data(network *net, data test)
     return pred;   
 }
 
-
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
+    // Function to validate the model on a given data set by calculating accuracy and top-k accuracy
     int i, j;
     network *net = load_network(filename, weightfile, 0);
     set_batch_network(net, 1);
@@ -112,6 +113,7 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
+    // Function to predict the classification of an image using a pre-trained network
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
     srand(2222222);
@@ -140,8 +142,6 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         }
         image im = load_image_color(input, 0, 0);
         image r = letterbox_image(im, net->w, net->h);
-        //resize_network(&net, r.w, r.h);
-        //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
         time=clock();
@@ -151,8 +151,6 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];
-            //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
-            //else printf("%s: %f\n",names[index], predictions[index]);
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
         if(r.data != im.data) free_image(r);
@@ -160,6 +158,3 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
