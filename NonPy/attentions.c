@@ -1,7 +1,14 @@
-
-
 void extend_data_truth(data *d, int n, float val)
 {
+    /*
+    This function extends the truth values matrix of a given data set by adding n columns with the same value val. 
+    
+    Args:
+        d: A pointer to the data set.
+        n: The number of columns to add.
+        val: The value to fill the new columns with.
+    */
+
     int i, j;
     for(i = 0; i < d->y.rows; ++i){
         d->y.vals[i] = realloc(d->y.vals[i], (d->y.cols+n)*sizeof(float));
@@ -14,6 +21,17 @@ void extend_data_truth(data *d, int n, float val)
 
 matrix network_loss_data(network *net, data test)
 {
+    /*
+    This function computes the loss matrix for a given test data set using a given neural network. 
+    
+    Args:
+        net: A pointer to the neural network.
+        test: The test data set.
+        
+    Returns:
+        The computed loss matrix.
+    */
+    
     int i,b;
     int k = 1;
     matrix pred = make_matrix(test.X.rows, k);
@@ -51,6 +69,15 @@ matrix network_loss_data(network *net, data test)
 
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
+    /*
+    This function performs validation on a given data set using a multi-scale attention model specified by a given configuration.
+    
+    Args:
+        datacfg: The path to the data configuration file.
+        filename: The path to the file containing the pre-trained model.
+        weightfile: The path to the file containing the model weights.
+    */
+    
     int i, j;
     network *net = load_network(filename, weightfile, 0);
     set_batch_network(net, 1);
@@ -112,6 +139,17 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
+    /*
+    This function performs prediction on a given image file using a given attention model specified by a given configuration.
+    
+    Args:
+        datacfg: The path to the data configuration file.
+        cfgfile: The path to the network configuration file.
+        weightfile: The path to the file containing the network weights.
+        filename: The path to the image file to perform prediction on. If set to NULL, the user will be prompted to enter an image path.
+        top: The number of top predictions to display.
+    */
+    
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
     srand(2222222);
@@ -160,6 +198,3 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
