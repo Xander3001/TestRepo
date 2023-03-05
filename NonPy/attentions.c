@@ -1,5 +1,5 @@
-
-
+```
+# Function to extend data with truth values
 void extend_data_truth(data *d, int n, float val)
 {
     int i, j;
@@ -12,6 +12,7 @@ void extend_data_truth(data *d, int n, float val)
     d->y.cols += n;
 }
 
+# Function to calculate network loss data
 matrix network_loss_data(network *net, data test)
 {
     int i,b;
@@ -48,7 +49,7 @@ matrix network_loss_data(network *net, data test)
     return pred;   
 }
 
-
+# Function to validate attention multi
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
     int i, j;
@@ -110,6 +111,7 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
     }
 }
 
+# Function to predict attention
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
     network *net = load_network(cfgfile, weightfile, 0);
@@ -160,6 +162,4 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
+```
