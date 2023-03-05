@@ -1,7 +1,1 @@
-def fib(num):
-    if num <= 1:
-        return num
-    else:
-        return fib(num-1) + fib(num-2)
-print(fib(10))
-
+The code implements a recursive function to calculate the nth number in the Fibonacci sequence. The function takes in one parameter, num, which represents the index of the number in the sequence to be calculated. The code returns the calculated value for the 10th number in the sequence using a print statement.
