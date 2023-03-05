@@ -1,35 +1,55 @@
+import tweepy
+from tweepy import OAuthHandler
+from tweepy import Stream
+from tweepy.streaming import StreamListener
+import socket
+import json
 
-    while (cap.isOpened()):
-        ret, img = cap.read()
-        img, contours, thresh = get_img_contour_thresh(img)
-        ans1 = ''
-        ans2 = ''
-        ans3 = ''
-        if len(contours) > 0:
-            contour = max(contours, key=cv2.contourArea)
-            if cv2.contourArea(contour) > 2500:
-                # print(predict(w_from_model,b_from_model,contour))
-                x, y, w, h = cv2.boundingRect(contour)
-                # newImage = thresh[y - 15:y + h + 15, x - 15:x + w +15]
-                newImage = thresh[y:y + h, x:x + w]
-                newImage = cv2.resize(newImage, (28, 28))
-                newImage = np.array(newImage)
-                newImage = newImage.flatten()
-                newImage = newImage.reshape(newImage.shape[0], 1)
-                ans1 = Digit_Recognizer_LR.predict(w_LR, b_LR, newImage)
-                ans2 = Digit_Recognizer_NN.predict_nn(d2, newImage)
-                ans3 = Digit_Recognizer_DL.predict(d3, newImage)
 
-        x, y, w, h = 0, 0, 300, 300
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(img, "Logistic Regression : " + str(ans1), (10, 320),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(img, "Shallow Network :  " + str(ans2), (10, 350),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(img, "Deep Network :  " + str(ans3), (10, 380),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.imshow("Frame", img)
-        cv2.imshow("Contours", thresh)
-        k = cv2.waitKey(10)
-        if k == 27:
-            break
+# Set up your credentials
+consumer_key=''
+consumer_secret=''
+access_token =''
+access_secret=''
+
+
+class TweetsListener(StreamListener):
+
+  def __init__(self, csocket):
+      self.client_socket = csocket
+
+  def on_data(self, data):
+      try:
+          msg = json.loads( data )
+          print( msg['text'].encode('utf-8') )
+          self.client_socket.send( msg['text'].encode('utf-8') )
+          return True
+      except BaseException as e:
+          print("Error on_data: %s" % str(e))
+      return True
+
+  def on_error(self, status):
+      print(status)
+      return True
+
+def sendData(c_socket):
+  auth = OAuthHandler(consumer_key, consumer_secret)
+  auth.set_access_token(access_token, access_secret)
+
+  twitter_stream = Stream(auth, TweetsListener(c_socket))
+  twitter_stream.filter(track=['soccer'])
+
+if __name__ == "__main__":
+  s = socket.socket()         # Create a socket object
+  host = "127.0.0.1"     # Get local machine name
+  port = 5555                 # Reserve a port for your service.
+  s.bind((host, port))        # Bind to the port
+
+  print("Listening on port: %s" % str(port))
+
+  s.listen(5)                 # Now wait for client connection.
+  c, addr = s.accept()        # Establish connection with client.
+
+  print( "Received request from: " + str( addr ) )
+
+  sendData( c )
