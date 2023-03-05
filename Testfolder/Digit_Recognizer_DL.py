@@ -1,35 +1,9 @@
-import numpy as np
-import matplotlib.pyplot as plt
+Overall, this code defines functions for performing softmax activation and its derivative, as well as relu activation and its derivative. These functions can be used in a neural network implementation.
 
+The `softmax()` function takes in a matrix of input values `z`, calculates the softmax function for each row of the matrix using the formula `np.exp(z).T / np.sum(np.exp(z), axis=1))`, and returns the resulting matrix and the original `z` matrix for use in back-propagation.
 
-def softmax(z):
-    cache = z
-    z -= np.max(z)
-    sm = (np.exp(z).T / np.sum(np.exp(z), axis=1))
-    return sm, cache
+The `relu()` function takes in a matrix of input values `z`, applies the rectified linear unit (relu) activation function to each element of the matrix using the formula `np.maximum(0, z)`, and returns the resulting matrix and the original `z` matrix for use in back-propagation.
 
+The `softmax_backward()` function takes in a matrix of derivatives `dA` and the original `z` matrix from the softmax activation, calculates the derivative of the softmax function with respect to `z` using the formula `dZ = dA * s * (1 - s)`, and returns the resulting derivative matrix.
 
-def relu(z):
-
-    s = np.maximum(0, z)
-    cache = z
-    return s, cache
-
-
-def softmax_backward(dA, cache):
-
-    z = cache
-    z -= np.max(z)
-    s = (np.exp(z).T / np.sum(np.exp(z), axis=1))
-    dZ = dA * s * (1 - s)
-    return dZ
-
-
-def relu_backward(dA, cache):
- 
-    Z = cache
-    dZ = np.array(dA, copy=True)  # just converting dz to a correct object.
-    dZ[Z <= 0] = 0
-    return dZ
-
-
+The `relu_backward()` function takes in a matrix of derivatives `dA` and the original `z` matrix from the relu activation, calculates the derivative of the relu function with respect to `z` using the formula `dZ = dA * (Z > 0)`, and returns the resulting derivative matrix.
