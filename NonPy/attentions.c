@@ -1,5 +1,9 @@
-
-
+/**
+ * This function extends the truth data in a given data structure by adding additional columns with a specified value
+ * @param d Pointer to the data structure
+ * @param n Number of columns to add
+ * @param val Value to fill in the newly added columns
+ */
 void extend_data_truth(data *d, int n, float val)
 {
     int i, j;
@@ -12,6 +16,12 @@ void extend_data_truth(data *d, int n, float val)
     d->y.cols += n;
 }
 
+/**
+ * This function computes the loss matrix for a given network using a specified test dataset
+ * @param net Pointer to the network structure
+ * @param test Test dataset
+ * @return The loss matrix
+ */
 matrix network_loss_data(network *net, data test)
 {
     int i,b;
@@ -49,6 +59,12 @@ matrix network_loss_data(network *net, data test)
 }
 
 
+/**
+ * This function validates the performance of attention multi using the specified configuration files and dataset
+ * @param datacfg Data configuration file
+ * @param filename Filename containing the trained network weights
+ * @param weightfile Weight file
+ */
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
     int i, j;
@@ -110,6 +126,14 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
     }
 }
 
+/**
+ * This function predicts the class of a given input image using the specified configuration files and trained network weights
+ * @param datacfg Data configuration file
+ * @param cfgfile Network configuration file
+ * @param weightfile Weight file
+ * @param filename (Optional) Filename of the input image. If not provided, the user is prompted to provide an input image.
+ * @param top Number of top predictions to show
+ */
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
     network *net = load_network(cfgfile, weightfile, 0);
@@ -160,6 +184,3 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
