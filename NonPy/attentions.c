@@ -1,5 +1,10 @@
-
-
+/**
+ * @brief Extend the data truth values with a given value.
+ * 
+ * @param d A pointer to a data structure.
+ * @param n An integer value indicating the number of values to add.
+ * @param val A float value to fill the newly added values with.
+ */
 void extend_data_truth(data *d, int n, float val)
 {
     int i, j;
@@ -12,6 +17,14 @@ void extend_data_truth(data *d, int n, float val)
     d->y.cols += n;
 }
 
+/**
+ * @brief Compute the loss of a neural network on test data.
+ * 
+ * @param net A pointer to a neural network.
+ * @param test A data structure representing the test data.
+ * 
+ * @return A matrix representing the loss computed on the test data.
+ */
 matrix network_loss_data(network *net, data test)
 {
     int i,b;
@@ -48,7 +61,13 @@ matrix network_loss_data(network *net, data test)
     return pred;   
 }
 
-
+/**
+ * @brief Validate a neural network on a given dataset using top-k accuracy.
+ * 
+ * @param datacfg A string indicating the path of the configuration file for the dataset.
+ * @param filename A string indicating the path of the neural network file.
+ * @param weightfile A string indicating the path of the weights file for the neural network.
+ */
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
     int i, j;
@@ -110,6 +129,15 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
     }
 }
 
+/**
+ * @brief Use a neural network to predict the class of an image.
+ * 
+ * @param datacfg A string indicating the path of the configuration file for the dataset.
+ * @param cfgfile A string indicating the path of the configuration file for the neural network.
+ * @param weightfile A string indicating the path of the weights file for the neural network.
+ * @param filename A string indicating the path of the image file to be predicted (can be NULL for user input).
+ * @param top An integer indicating the number of top predictions to output.
+ */
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
     network *net = load_network(cfgfile, weightfile, 0);
@@ -140,8 +168,6 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         }
         image im = load_image_color(input, 0, 0);
         image r = letterbox_image(im, net->w, net->h);
-        //resize_network(&net, r.w, r.h);
-        //printf("%d %d\n", r.w, r.h);
 
         float *X = r.data;
         time=clock();
@@ -151,8 +177,6 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         fprintf(stderr, "%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
             int index = indexes[i];
-            //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
-            //else printf("%s: %f\n",names[index], predictions[index]);
             printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
         }
         if(r.data != im.data) free_image(r);
@@ -160,6 +184,3 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
