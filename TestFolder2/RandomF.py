@@ -1,4 +1,8 @@
-
+# This code performs various natural language processing tasks using Spacy library, including:
+# - extracting the most common nouns and verbs from given text
+# - redacting names and locations from given text by replacing them with [REDACTED]
+# - tokenizing a sentence by lemmatizing, removing stopwords and punctuation, and returning the processed tokens as a string
+# - identifying named entities from a given dataframe of descriptions and storing them in a new dataframe, categorizing them by entity type
 
 nouns = [ token.text for token in doc if token.is_stop != True and token.is_punct !=True and token.pos_ == 'NOUN']
 word_freq = Counter(nouns)
@@ -11,6 +15,7 @@ print(Counter(verbs).most_common(10))
 
 
 def sanitize_names(text):
+    # takes in a string of text and returns the text with names replaced by [REDACTED]
     doc = nlp(text)
     redacted_sentences = []
     for ent in doc.ents:
@@ -25,6 +30,7 @@ def sanitize_names(text):
   
 
 def sanitize_locations(text):
+    # takes in a string of text and returns the text with locations replaced by [REDACTED]
     doc = nlp(text)
     redacted_sentences = []
     for ent in doc.ents:
@@ -38,8 +44,8 @@ def sanitize_locations(text):
   
   
   
-  
 def spacy_tokenizer(sentence):
+    # tokenizes a sentence by lemmatizing, removing stopwords and punctuation, and returning the processed tokens as a string
     mytokens = parser(sentence)
     mytokens = [ word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_ for word in mytokens ]
     mytokens = [ word for word in mytokens if word not in stopwords and word not in punctuations ]
@@ -48,6 +54,7 @@ def spacy_tokenizer(sentence):
 
 
 def selected_topics(model, vectorizer, top_n=10):
+    # prints the top n most important words in each topic of a given LDA model
     for idx, topic in enumerate(model.components_):
         print("Topic %d:" % (idx))
         print([(vectorizer.get_feature_names()[i], topic[i])
