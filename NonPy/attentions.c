@@ -1,5 +1,9 @@
-
-
+/**
+ * @brief Extend the values of a data struct with a given float value
+ * @param d pointer to a data struct
+ * @param n an integer representing the amount of values to be extended
+ * @param val the specified float value to be extended to the data
+ */
 void extend_data_truth(data *d, int n, float val)
 {
     int i, j;
@@ -12,6 +16,12 @@ void extend_data_truth(data *d, int n, float val)
     d->y.cols += n;
 }
 
+/**
+ * @brief Obtain a matrix of network loss data for test classification
+ * @param net pointer to a network struct
+ * @param test a data struct representing the test data
+ * @return matrix with predicted values and error values
+ */ 
 matrix network_loss_data(network *net, data test)
 {
     int i,b;
@@ -48,7 +58,13 @@ matrix network_loss_data(network *net, data test)
     return pred;   
 }
 
-
+/**
+ * @brief Validate the attention multipliers by loading a network, validating,
+ * and calculating the accuracy and topk results.
+ * @param datacfg path to the data config file
+ * @param filename name of the file to validate
+ * @param weightfile name of the weight file
+ */
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
     int i, j;
@@ -110,6 +126,14 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
     }
 }
 
+/**
+ * @brief Predict the attention multipliers based on a given image
+ * @param datacfg path to the data config file
+ * @param cfgfile path to the cfg file
+ * @param weightfile path to the weight file
+ * @param filename name of the image file to predict the attention multipliers
+ * @param top an integer specifying the top prediction
+ */
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
     network *net = load_network(cfgfile, weightfile, 0);
@@ -160,6 +184,3 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
