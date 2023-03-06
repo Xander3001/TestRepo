@@ -1,35 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
+This code defines several functions for implementing two commonly used activation functions in neural networks: softmax and ReLU. The softmax function converts a set of input values into a probability distribution by taking the exponentials of the input values and normalizing them by dividing by their sum. The ReLU function applies an element-wise non-linearity to the input values, setting any negative values to zero while leaving positive values unchanged.
 
-
-def softmax(z):
-    cache = z
-    z -= np.max(z)
-    sm = (np.exp(z).T / np.sum(np.exp(z), axis=1))
-    return sm, cache
-
-
-def relu(z):
-
-    s = np.maximum(0, z)
-    cache = z
-    return s, cache
-
-
-def softmax_backward(dA, cache):
-
-    z = cache
-    z -= np.max(z)
-    s = (np.exp(z).T / np.sum(np.exp(z), axis=1))
-    dZ = dA * s * (1 - s)
-    return dZ
-
-
-def relu_backward(dA, cache):
- 
-    Z = cache
-    dZ = np.array(dA, copy=True)  # just converting dz to a correct object.
-    dZ[Z <= 0] = 0
-    return dZ
-
-
+The functions "softmax_backward" and "relu_backward" provide the derivative of the corresponding activation functions, which can be used during backpropagation to calculate gradients and update model parameters.
