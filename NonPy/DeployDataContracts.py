@@ -7,6 +7,7 @@ import json
 
 import requests
 
+# Get repository and branch information
 with tracer.start_as_current_span("branch-info") as span:
     ctx = json.loads(
         dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
@@ -43,6 +44,7 @@ with tracer.start_as_current_span("branch-info") as span:
 
 from pyspark.sql.functions import col, input_file_name, lit
 
+# Load existing contracts from database
 with tracer.start_as_current_span("load-existing") as span:
 
     contract_store_sql_server = dbutils.secrets.get(
@@ -85,6 +87,7 @@ from datetime import datetime
 
 from pyspark.sql.functions import input_file_name, lit
 
+# Load new contracts from file system
 with tracer.start_as_current_span("load-new") as span:
     json_contracts_df = (
         spark.read.option("recursiveFileLookup", "true")
@@ -147,13 +150,17 @@ with tracer.start_as_current_span("load-new") as span:
 
 # COMMAND ----------
 
+# Remove contracts for current branch from existing contracts dataframe
 with_old_contracts_for_branch_removed_df = db_contracts_df.filter(
     col("branch") != lit(branch)
 )
+
+# Combine contracts from file system and remaining contracts from database
 with_new_contracts_added = with_old_contracts_for_branch_removed_df.unionByName(
     conformed_new_json_df
 )
 
+# Overwrite database table with updated contracts
 with tracer.start_as_current_span("overwrite-with-updated") as span:
     with_new_contracts_added.write.format("jdbc").option("driver", driver).option(
         "url", sql_server_url
