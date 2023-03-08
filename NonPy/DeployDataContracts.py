@@ -1,12 +1,39 @@
 # Databricks notebook source
-# MAGIC %run "Repos/hydr8v3/hydr8-core/notebooks/internal/InvocableNotebook"
+"""
+This notebook loads data contracts from JSON files and updates the ContractStore.TBL_DPLY_JSON table on an Azure SQL Server.
+"""
 
-# COMMAND ----------
+from datetime import datetime
 
-import json
+from pyspark.sql.functions import col, input_file_name, lit
 
-import requests
+# Load existing data contracts from the ContractStore.TBL_DPLY_JSON table
+contract_store_sql_server = dbutils.secrets.get(scope="hydr8v3-scope", key="sql-server-name")
+hydr8v3_db = dbutils.secrets.get(scope="hydr8v3-scope", key="hydr8v3-db-name")
 
+dbx_sp_client_id = dbutils.secrets.get(scope="hydr8v3-scope", key="dbx-sp-client-id")
+dbx_sp_client_secret = dbutils.secrets.get(scope="hydr8v3-scope", key="dbx-sp-client-secret")
+
+sql_server_url = (
+    "jdbc:sqlserver://{contract_store_sql_server}.database.windows.net:1433;"
+    f"database={hydr8v3_db};"
+    f"AADSecurePrincipalId={dbx_sp_client_id};"
+    f"AADSecurePrincipalSecret={dbx_sp_client_secret};"
+    "encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;"
+    "loginTimeout=30;authentication=ActiveDirectoryServicePrincipal"
+)
+contracts_table = "ContractStore.TBL_DPLY_JSON"
+driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+
+db_contracts_df = (
+    spark.read.format("jdbc")
+    .option("driver", driver)
+    .option("url", sql_server_url)
+    .option("dbtable", contracts_table)
+    .load()
+)
+
+# Get current branch information
 with tracer.start_as_current_span("branch-info") as span:
     ctx = json.loads(
         dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
@@ -38,53 +65,7 @@ with tracer.start_as_current_span("branch-info") as span:
         },
     )
 
-
-# COMMAND ----------
-
-from pyspark.sql.functions import col, input_file_name, lit
-
-with tracer.start_as_current_span("load-existing") as span:
-
-    contract_store_sql_server = dbutils.secrets.get(
-        scope="hydr8v3-scope", key="sql-server-name"
-    )
-    hydr8v3_db = dbutils.secrets.get(scope="hydr8v3-scope", key="hydr8v3-db-name")
-
-    dbx_sp_client_id = dbutils.secrets.get(
-        scope="hydr8v3-scope", key="dbx-sp-client-id"
-    )
-    dbx_sp_client_secret = dbutils.secrets.get(
-        scope="hydr8v3-scope", key="dbx-sp-client-secret"
-    )
-
-    sql_server_url = f"jdbc:sqlserver://{contract_store_sql_server}.database.windows.net:1433;database={hydr8v3_db};AADSecurePrincipalId={dbx_sp_client_id};AADSecurePrincipalSecret={dbx_sp_client_secret};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;authentication=ActiveDirectoryServicePrincipal"
-    contracts_table = "ContractStore.TBL_DPLY_JSON"
-    driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-
-    db_contracts_df = (
-        spark.read.format("jdbc")
-        .option("driver", driver)
-        .option("url", sql_server_url)
-        .option("dbtable", contracts_table)
-        .load()
-    )
-
-    span.add_event(
-        f"Loaded contracts from the DB",
-        attributes={
-            "loadedRecords": db_contracts_df.count(),
-            "dbServer": contract_store_sql_server,
-            "db": hydr8v3_db,
-        },
-    )
-
-
-# COMMAND ----------
-
-from datetime import datetime
-
-from pyspark.sql.functions import input_file_name, lit
-
+# Load new data contracts from JSON files
 with tracer.start_as_current_span("load-new") as span:
     json_contracts_df = (
         spark.read.option("recursiveFileLookup", "true")
@@ -144,9 +125,7 @@ with tracer.start_as_current_span("load-new") as span:
         attributes={"loadedFiles": json_contracts_df.count()},
     )
 
-
-# COMMAND ----------
-
+# Update the ContractStore.TBL_DPLY_JSON table on the Azure SQL Server with the new data contracts
 with_old_contracts_for_branch_removed_df = db_contracts_df.filter(
     col("branch") != lit(branch)
 )
