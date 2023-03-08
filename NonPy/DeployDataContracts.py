@@ -1,22 +1,30 @@
 # Databricks notebook source
-# MAGIC %run "Repos/hydr8v3/hydr8-core/notebooks/internal/InvocableNotebook"
+"""
+This notebook deploys changes to data contract configurations by loading all JSON files from the contract 
+configuration directory, including the `Contracts`, `Transforms`, `EnvironmentConfig`, `global.jsonc` and `EntitySchemas` 
+folders. It then merges this new data with the existing data from the ContractStore.TBL_DPLY_JSON table, overwriting 
+any data that exists for the current branch, and saving the merged data to the ContractStore.TBL_DPLY_JSON table.
+"""
 
-# COMMAND ----------
-
+# Import necessary libraries
 import json
-
 import requests
+from datetime import datetime
+from pyspark.sql.functions import col, input_file_name, lit
 
+# Load branch information and credentials
 with tracer.start_as_current_span("branch-info") as span:
     ctx = json.loads(
         dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
     )
 
+    # Extract relevant information from context
     notebook_path = ctx["extraContext"]["notebook_path"]
     repo_path = "/".join(notebook_path.split("/")[:4])
     api_url = ctx["extraContext"]["api_url"]
     api_token = ctx["extraContext"]["api_token"]
 
+    # Query the workspace API for the current branch
     repo_dir_data = requests.get(
         f"{api_url}/api/2.0/workspace/get-status",
         headers={"Authorization": f"Bearer {api_token}"},
@@ -28,6 +36,7 @@ with tracer.start_as_current_span("branch-info") as span:
         headers={"Authorization": f"Bearer {api_token}"},
     ).json()
 
+    # Extract branch information and log it as an event
     branch = repo_data.get("branch")
     span.add_event(
         f"Deploy Data Contracts is operating on Branch: {branch}",
@@ -38,29 +47,18 @@ with tracer.start_as_current_span("branch-info") as span:
         },
     )
 
-
-# COMMAND ----------
-
-from pyspark.sql.functions import col, input_file_name, lit
-
+# Load existing contracts from database
 with tracer.start_as_current_span("load-existing") as span:
-
-    contract_store_sql_server = dbutils.secrets.get(
-        scope="hydr8v3-scope", key="sql-server-name"
-    )
+    # Load connection details from secrets
+    contract_store_sql_server = dbutils.secrets.get(scope="hydr8v3-scope", key="sql-server-name")
     hydr8v3_db = dbutils.secrets.get(scope="hydr8v3-scope", key="hydr8v3-db-name")
-
-    dbx_sp_client_id = dbutils.secrets.get(
-        scope="hydr8v3-scope", key="dbx-sp-client-id"
-    )
-    dbx_sp_client_secret = dbutils.secrets.get(
-        scope="hydr8v3-scope", key="dbx-sp-client-secret"
-    )
-
+    dbx_sp_client_id = dbutils.secrets.get(scope="hydr8v3-scope", key="dbx-sp-client-id")
+    dbx_sp_client_secret = dbutils.secrets.get(scope="hydr8v3-scope", key="dbx-sp-client-secret")
     sql_server_url = f"jdbc:sqlserver://{contract_store_sql_server}.database.windows.net:1433;database={hydr8v3_db};AADSecurePrincipalId={dbx_sp_client_id};AADSecurePrincipalSecret={dbx_sp_client_secret};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;authentication=ActiveDirectoryServicePrincipal"
     contracts_table = "ContractStore.TBL_DPLY_JSON"
     driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
+    # Load existing contracts from database
     db_contracts_df = (
         spark.read.format("jdbc")
         .option("driver", driver)
@@ -69,6 +67,7 @@ with tracer.start_as_current_span("load-existing") as span:
         .load()
     )
 
+    # Log event for successfully loading contracts from the database
     span.add_event(
         f"Loaded contracts from the DB",
         attributes={
@@ -78,13 +77,7 @@ with tracer.start_as_current_span("load-existing") as span:
         },
     )
 
-
-# COMMAND ----------
-
-from datetime import datetime
-
-from pyspark.sql.functions import input_file_name, lit
-
+# Load new contracts from contract configuration directory
 with tracer.start_as_current_span("load-new") as span:
     json_contracts_df = (
         spark.read.option("recursiveFileLookup", "true")
@@ -127,6 +120,7 @@ with tracer.start_as_current_span("load-new") as span:
         .withColumn("fileType", lit("entitySchema"))
     )
 
+    # Combine all loaded JSON files into a single dataframe and format it for updating the database
     collated_df = (
         json_contracts_df.unionByName(json_transforms_df)
         .unionByName(json_env_config_df)
@@ -139,14 +133,14 @@ with tracer.start_as_current_span("load-new") as span:
         .withColumn("branch", lit(branch))
         .withColumn("dateLoaded", lit(datetime.now()))
     )
+
+    # Log event for successfully loading new contracts from the contract configuration directory
     span.add_event(
         "Loaded new contracts from JSON",
         attributes={"loadedFiles": json_contracts_df.count()},
     )
 
-
-# COMMAND ----------
-
+# Overwrite database with updated dataframe
 with_old_contracts_for_branch_removed_df = db_contracts_df.filter(
     col("branch") != lit(branch)
 )
@@ -160,6 +154,8 @@ with tracer.start_as_current_span("overwrite-with-updated") as span:
     ).option("dbtable", contracts_table).mode("overwrite").option(
         "truncate", "true"
     ).save()
+    
+    # Log event for successfully updating the database
     span.add_event(
         "Loaded new records from JSON",
         attributes={"recordsWritten": with_new_contracts_added.count()},
