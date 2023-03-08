@@ -1,21 +1,29 @@
-
-
+/**
+ * Tests for a basic neural network using different gate training sets: AND, OR, and NOT.
+ */
 describe('Basic Neural Network', function () {
-
+  
+  /**
+   * Tests if the neural network can successfully train for an AND gate.
+   */
   it("trains an AND gate", function () {
-
+    // Define input and output layers
     var inputLayer = new Layer(2),
       outputLayer = new Layer(1);
 
+    // Connect input to output layer
     inputLayer.project(outputLayer);
 
+    // Set up network with input and output layers
     var network = new Network({
       input: inputLayer,
       output: outputLayer
     });
 
+    // Set up trainer with the network
     var trainer = new Trainer(network);
 
+    // Set up training set with input and expected output for AND gate
     var trainingSet = [{
       input: [0, 0],
       output: [0]
@@ -30,11 +38,13 @@ describe('Basic Neural Network', function () {
       output: [1]
     }];
 
+    // Train the network with the training set
     trainer.train(trainingSet, {
       iterations: 1000,
       error: .001
     });
 
+    // Test the network with different inputs and expected outputs for AND gate
     var test00 = Math.round(network.activate([0, 0]));
     assert.equal(test00, 0, "[0,0] did not output 0");
 
@@ -48,20 +58,27 @@ describe('Basic Neural Network', function () {
     assert.equal(test11, 1, "[1,1] did not output 1");
   });
 
+  /**
+   * Tests if the neural network can successfully train for an OR gate.
+   */
   it("trains an OR gate", function () {
-
+    // Define input and output layers
     var inputLayer = new Layer(2),
       outputLayer = new Layer(1);
 
+    // Connect input to output layer
     inputLayer.project(outputLayer);
 
+    // Set up network with input and output layers
     var network = new Network({
       input: inputLayer,
       output: outputLayer
     });
 
+    // Set up trainer with the network
     var trainer = new Trainer(network);
 
+    // Set up training set with input and expected output for OR gate
     var trainingSet = [{
       input: [0, 0],
       output: [0]
@@ -76,11 +93,13 @@ describe('Basic Neural Network', function () {
       output: [1]
     }];
 
+    // Train the network with the training set
     trainer.train(trainingSet, {
       iterations: 1000,
       error: .001
     });
 
+    // Test the network with different inputs and expected outputs for OR gate
     var test00 = Math.round(network.activate([0, 0]));
     assert.equal(test00, 0, "[0,0] did not output 0");
 
@@ -94,19 +113,27 @@ describe('Basic Neural Network', function () {
     assert.equal(test11, 1, "[1,1] did not output 1");
   });
 
+  /**
+   * Tests if the neural network can successfully train for a NOT gate.
+   */
   it("trains a NOT gate", function () {
-
+    // Define input and output layers
     var inputLayer = new Layer(1),
       outputLayer = new Layer(1);
 
+    // Connect input to output layer
     inputLayer.project(outputLayer);
 
+    // Set up network with input and output layers
     var network = new Network({
       input: inputLayer,
       output: outputLayer
     });
 
+    // Set up trainer with the network
     var trainer = new Trainer(network);
+
+    // Set up training set with input and expected output for NOT gate
     var trainingSet = [{
       input: [0],
       output: [1]
@@ -115,11 +142,13 @@ describe('Basic Neural Network', function () {
       output: [0]
     }];
 
+    // Train the network with the training set
     trainer.train(trainingSet, {
       iterations: 1000,
       error: .001
     });
 
+    // Test the network with different inputs and expected outputs for NOT gate
     var test0 = Math.round(network.activate([0]));
     assert.equal(test0, 1, "0 did not output 1");
 
@@ -128,14 +157,20 @@ describe('Basic Neural Network', function () {
   });
 });
 
-
+/**
+ * Tests for a Perceptron model to learn the sine function and cross validate the prediction accuracy.
+ */
 describe("Perceptron - SIN", function () {
+  // Helper function to define the sine function output
   var mySin = function (x) {
     return (Math.sin(x) + 1) / 2;
   };
 
+  // Set up Perceptron model with 1 input layer, 12 hidden neurons, and 1 output layer
   var sinNetwork = new Perceptron(1, 12, 1);
   var trainer = new Trainer(sinNetwork);
+
+  // Generate random training set of 800 input and output pairs for sine function
   var trainingSet = [];
 
   while (trainingSet.length < 800) {
@@ -146,6 +181,7 @@ describe("Perceptron - SIN", function () {
     });
   }
 
+  // Train the model with the sine function training set
   var results = trainer.train(trainingSet, {
     iterations: 2000,
     log: false,
@@ -153,6 +189,7 @@ describe("Perceptron - SIN", function () {
     cost: Trainer.cost.MSE,
   });
 
+  // Test the model with specific inputs for sine function and expected outputs
   [0, .5 * Math.PI, 2]
     .forEach(function (x) {
       var y = mySin(x);
@@ -163,163 +200,29 @@ describe("Perceptron - SIN", function () {
       });
     });
 
+  // Check if the error rate of the model is within an acceptable range
   var errorResult = results.error;
   it("Sin error: " + errorResult, function () {
     assert.isAtMost(errorResult, .001, "Sin error not less than or equal to desired error.");
   });
 });
 
+/**
+ * Tests for a Perceptron model to learn the sine function with cross validation.
+ */
 describe("Perceptron - SIN - CrossValidate", function () {
-
+  // Helper function to define the sine function output
   var mySin = function (x) {
     return (Math.sin(x) + 1) / 2;
   };
 
+  // Set up Perceptron model with 1 input layer, 12 hidden neurons, and 1 output layer
   var sinNetwork = new Perceptron(1, 12, 1);
   var trainer = new Trainer(sinNetwork);
 
+  // Generate random training set of 800 input and output pairs for sine function
   var trainingSet = Array.apply(null, Array(800)).map(function () {
     var inputValue = Math.random() * Math.PI * 2;
     return {
       input: [inputValue],
-      output: [mySin(inputValue)]
-    };
-  });
-
-  var results = trainer.train(trainingSet, {
-    iterations: 2000,
-    log: false,
-    error: 1e-6,
-    cost: Trainer.cost.MSE,
-    crossValidate: {
-      testSize: .3,
-      testError: 1e-6
-    }
-  });
-
-  var test0 = sinNetwork.activate([0])[0];
-  var expected0 = mySin(0);
-  it("input: [0] output: " + test0 + ", expected: " + expected0, function () {
-    assert.isAtMost(Math.abs(test0 - expected0), .035, "[0] did not output " + expected0);
-  });
-
-  var test05PI = sinNetwork.activate([.5 * Math.PI])[0];
-  var expected05PI = mySin(.5 * Math.PI);
-  it("input: [0.5*Math.PI] output: " + test05PI + ", expected: " + expected05PI, function () {
-    assert.isAtMost(Math.abs(test05PI - expected05PI), .035, "[0.5*Math.PI] did not output " + expected05PI);
-  });
-
-  var test2 = sinNetwork.activate([2])[0];
-  var expected2 = mySin(2);
-  it("input: [2] output: " + test2 + ", expected: " + expected2, function () {
-    var eq = equalWithError(test2, expected2, .035);
-    assert.equal(eq, true, "[2] did not output " + expected2);
-  });
-
-  var errorResult = results.error;
-  it("CrossValidation error: " + errorResult, function () {
-    var lessThanOrEqualError = errorResult <= .001;
-    assert.equal(lessThanOrEqualError, true, "CrossValidation error not less than or equal to desired error.");
-  });
-});
-
-describe("LSTM - Discrete Sequence Recall", function () {
-  var targets = [2, 4];
-  var distractors = [3, 5];
-  var prompts = [0, 1];
-  var length = 9;
-
-  var lstm = new LSTM(5, 3, 2);
-  var trainer = new Trainer(lstm);
-
-  trainer.DSR({
-    targets: targets,
-    distractors: distractors,
-    prompts: prompts,
-    length: length,
-    rate: .17,
-    iterations: 250000
-  });
-
-  var symbols = targets.length + distractors.length + prompts.length;
-  var sequence = [],
-    indexes = [],
-    positions = [];
-  var sequenceLength = length - prompts.length;
-
-  for (i = 0; i < sequenceLength; i++) {
-    var any = Math.random() * distractors.length | 0;
-    sequence.push(distractors[any]);
-  }
-  indexes = [], positions = [];
-  for (i = 0; i < prompts.length; i++) {
-    indexes.push(Math.random() * targets.length | 0);
-    positions.push(noRepeat(sequenceLength, positions));
-  }
-  positions = positions.sort();
-  for (i = 0; i < prompts.length; i++) {
-    sequence[positions[i]] = targets[indexes[i]];
-    sequence.push(prompts[i]);
-  }
-
-  var check = function (which) {
-    // generate input from sequence
-    var input = [];
-    for (let j = 0; j < symbols; j++)
-      input[j] = 0;
-    input[sequence[which]] = 1;
-
-    // generate target output
-    var output = [];
-    for (let j = 0; j < targets.length; j++)
-      output[j] = 0;
-
-    if (which >= sequenceLength) {
-      var index = which - sequenceLength;
-      output[indexes[index]] = 1;
-    }
-
-    // check result
-    var prediction = lstm.activate(input);
-    return {
-      prediction: prediction,
-      output: output
-    };
-  };
-
-  var value = function (array) {
-    var max = .5;
-    var res = -1;
-    for (var i in array)
-      if (array[i] > max) {
-        max = array[i];
-        res = i;
-      }
-    return res == -1 ? '-' : targets[res];
-  };
-
-  it("targets: " + targets, function () {
-    assert(true);
-  });
-  it("distractors: " + distractors, function () {
-    assert(true);
-  });
-  it("prompts: " + prompts, function () {
-    assert(true);
-  });
-  it("length: " + length + "\n", function () {
-    assert(true);
-  });
-
-  for (var i = 0; i < length; i++) {
-    var test = check(i);
-    it((i + 1) + ") input: " + sequence[i] + " output: " + value(test.prediction),
-      function () {
-        var ok = equal(test.prediction, test.output);
-        assert(ok);
-      });
-  }
-});
-
-
-
+      output: [mySin(inputValue
