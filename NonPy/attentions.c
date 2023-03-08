@@ -1,4 +1,51 @@
+'''
+extend_data_truth: 
+Function that extends the truth data of a given data object by adding n columns with the given float value val.
 
+Arguments:
+- d: pointer to a data object.
+- n: number of columns to add to d->y.
+- val: float value to store in the newly added columns.
+
+Returns:
+None.
+
+network_loss_data:
+Function that computes the loss of a network on a given test dataset.
+
+Arguments:
+- net: pointer to a network object.
+- test: a data object representing the test dataset.
+
+Returns:
+A matrix object containing the computed loss.
+
+validate_attention_multi:
+Function that validates a network on a given validation dataset.
+
+Arguments:
+- datacfg: path to the data configuration file.
+- filename: path to the network weights file.
+- weightfile: path to the network weights file.
+ 
+Returns:
+None.
+
+predict_attention:
+Function that performs prediction on a given image using a given network.
+
+Arguments:
+- datacfg: path to the data configuration file.
+- cfgfile: path to the network configuration file.
+- weightfile: path to the network weights file.
+- filename: path to the image file to predict on.
+- top: number of top predictions to show.
+
+Returns:
+None.
+'''
+
+# Function code starts here
 
 void extend_data_truth(data *d, int n, float val)
 {
@@ -160,6 +207,3 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
