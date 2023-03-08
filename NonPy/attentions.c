@@ -1,5 +1,13 @@
+The full code with docstring documentation:
 
-
+``` c
+/**
+ * Extend the data truth by adding n columns with the value val to each row
+ *
+ * @param d The data to be extended
+ * @param n The number of columns to be added
+ * @param val The value to fill the new columns
+ */
 void extend_data_truth(data *d, int n, float val)
 {
     int i, j;
@@ -12,6 +20,14 @@ void extend_data_truth(data *d, int n, float val)
     d->y.cols += n;
 }
 
+/**
+ * Compute the loss of a neural network on a given test data
+ *
+ * @param net The neural network to be evaluated
+ * @param test The test data
+ * @return The loss for each row in the test data, computed as the negative sum of the outputs for the true class
+ *         label minus some constant (err = - sum(delta) - constant)
+ */
 matrix network_loss_data(network *net, data test)
 {
     int i,b;
@@ -48,7 +64,13 @@ matrix network_loss_data(network *net, data test)
     return pred;   
 }
 
-
+/**
+ * Validate a given attention model on a dataset
+ *
+ * @param datacfg The path to the data config file
+ * @param filename The name of the file to save the results to
+ * @param weightfile The weights for the model
+ */
 void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
 {
     int i, j;
@@ -110,6 +132,15 @@ void validate_attention_multi(char *datacfg, char *filename, char *weightfile)
     }
 }
 
+/**
+ * Predict the class label of an image using a neural network
+ *
+ * @param datacfg The path to the data config file
+ * @param cfgfile The path to the network definition file
+ * @param weightfile The path to the weights file
+ * @param filename The path to the image to predict the class for
+ * @param top The number of top results to display
+ */
 void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *filename, int top)
 {
     network *net = load_network(cfgfile, weightfile, 0);
@@ -160,6 +191,4 @@ void predict_attention(char *datacfg, char *cfgfile, char *weightfile, char *fil
         if (filename) break;
     }
 }
-
-
-
+```
