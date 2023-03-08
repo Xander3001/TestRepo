@@ -1,12 +1,23 @@
 # Databricks notebook source
-# MAGIC %run "Repos/hydr8v3/hydr8-core/notebooks/internal/InvocableNotebook"
+"""
+Invocable notebook to deploy data contracts from JSON files to SQL Server.
 
-# COMMAND ----------
+This notebook performs the following steps:
 
+1. Retrieve the current branch of the notebook in which this code is being executed.
+2. Load existing data contract records from SQL Server into a Spark DataFrame.
+3. Load new data contract records from JSON into a Spark DataFrame.
+4. Remove any existing contracts for the current branch and union the new contracts with the existing contracts.
+5. Write the updated contracts back to the Contracts SQL Server table.
+
+"""
+
+from pyspark.sql.functions import col, input_file_name, lit
+from datetime import datetime
 import json
-
 import requests
 
+# Obtain the current branch name
 with tracer.start_as_current_span("branch-info") as span:
     ctx = json.loads(
         dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
@@ -38,11 +49,7 @@ with tracer.start_as_current_span("branch-info") as span:
         },
     )
 
-
-# COMMAND ----------
-
-from pyspark.sql.functions import col, input_file_name, lit
-
+# Load existing contracts from SQL Server into a Spark DataFrame
 with tracer.start_as_current_span("load-existing") as span:
 
     contract_store_sql_server = dbutils.secrets.get(
@@ -78,13 +85,7 @@ with tracer.start_as_current_span("load-existing") as span:
         },
     )
 
-
-# COMMAND ----------
-
-from datetime import datetime
-
-from pyspark.sql.functions import input_file_name, lit
-
+# Load new contracts from JSON into a Spark DataFrame
 with tracer.start_as_current_span("load-new") as span:
     json_contracts_df = (
         spark.read.option("recursiveFileLookup", "true")
@@ -144,9 +145,7 @@ with tracer.start_as_current_span("load-new") as span:
         attributes={"loadedFiles": json_contracts_df.count()},
     )
 
-
-# COMMAND ----------
-
+# Remove any existing contracts for the current branch and union the new contracts with the existing contracts
 with_old_contracts_for_branch_removed_df = db_contracts_df.filter(
     col("branch") != lit(branch)
 )
@@ -154,6 +153,7 @@ with_new_contracts_added = with_old_contracts_for_branch_removed_df.unionByName(
     conformed_new_json_df
 )
 
+# Write the updated contracts back to the Contracts SQL Server table
 with tracer.start_as_current_span("overwrite-with-updated") as span:
     with_new_contracts_added.write.format("jdbc").option("driver", driver).option(
         "url", sql_server_url
